@@ -44,7 +44,6 @@ void PrintDriver(){
 
    while(1){
 	cons_printf("\nmy print pid is: %d \n", GetPid() );
-	Sleep(1);
 	MsgRcv(&local_msg);
 		p = local_msg.data;
 		while(*p){
@@ -56,10 +55,7 @@ void PrintDriver(){
 			SemWait(print_semaphore);
 			p++;
 		}//while p
-}//while1
-
-
-
+	}//while1
 }//print driver
 
 void Init(){
@@ -72,7 +68,8 @@ void Init(){
 	while(1){// infinite loop:
      		pid=GetPid();
          	cons_printf("%d ", pid);		// print 0 on PC            show my PID
-		Sleep(1); // for(a=0; a<1666000; a++) IO_DELAY();   //delay  1 sec               and sleep for 1 second ...
+		Sleep(1); 
+//		for(i=0; i<1666000; i++) IO_DELAY();   //delay  1 sec               and sleep for 1 second ...
         
         if(cons_kbhit()){		//check if key hit
 		key = cons_getchar();
@@ -345,47 +342,50 @@ void ShellDir(char *cmd, int STDOUT, int FileMgr) {
    // request to open it, then issue read in loop
    // write code:
    // apply standard "open object" protocol
+   MyStrCpy(msg.data, obj);
    msg.code=OPEN_OBJ;
    // prep msg: put code and obj in msg
-   MyStrCpy(msg.data, obj);
-   // send msg to FileMgr, receive msg back (should be OK)
+     // send msg to FileMgr, receive msg back (should be OK)
+   msg.recipient = FileMgr;
    MsgSnd(&msg);
    MsgRcv(&msg);
    //
    // loop
-   if(msg.code==GOOD){
+   
    //    apply standard "read object" protocol
    	while(1){
+		MyStrCpy(msg.data, obj);//(attr_t *)msg.data->data
    		msg.code=READ_OBJ;
    		msg.recipient= FileMgr;
    //    prep msg: put code in msg and send to FileMgr
    //    receive reply
-   		MyStrCpy(msg.data, obj);//(attr_t *)msg.data->data
+   	
    		MsgSnd(&msg);
    		MsgRcv(&msg);
    		
-   		if(msg.code ==GOOD){
-   			p = (attr_t *)msg.data;
-   			ShellDirStr(p, str);
-   			msg.recipient= STDOUT;
-   			MsgSnd(&msg);
-   			MsgRcv(&msg);
-   		}
-   		else break;
-   //    if code came back is not GOOD, break loop
-   
+   		if(msg.code !=GOOD)  break;  //    if code came back is not GOOD, break loop
+
+    		//p = (attr_t *)msg.data;
+   		ShellDirStr(p, str);
+		MyStrCpy(msg.data, str);
+   		msg.recipient= STDOUT;
+   		MsgSnd(&msg);
+   		MsgRcv(&msg);
+
    	};
-   }
+   
    //    (if continued, code was good)
    //    do the same thing with ShellDirStr() like above
    //    then show str via STDOUT
    // }
-   msg.recipient = STDOUT;
-   msg.code=CLOSE_OBJ;
    MyStrCpy(msg.data, obj);
+   msg.code=CLOSE_OBJ;
+   msg.recipient = FileMgr;
    MsgSnd(&msg);
    MsgRcv(&msg);
    
+
+
    if(msg.code !=GOOD){
    	MyStrCpy(msg.data, "The request was not valid.\n\0");
    	msg.recipient=STDOUT;
@@ -400,10 +400,11 @@ void ShellDir(char *cmd, int STDOUT, int FileMgr) {
    // apply standard "close object" protocol with FileMgr
    // if response is not GOOD, display error msg via STDOUT...
    //*************************************************************************
-   }
+
+      }
 
   void ShellTyp(char *cmd, int STDOUT, int FileMgr) {
-      char obj[101], str[101]; // get away without obj
+      // char obj[101], str[101]; // get away without obj
       attr_t *p;
       msg_t msg;
       
@@ -417,51 +418,49 @@ void ShellDir(char *cmd, int STDOUT, int FileMgr) {
    MsgSnd(&msg);
    MsgRcv(&msg);
    
-   // if code is not GOOD
+   p = (attr_t *)msg.data;
    if(msg.code != GOOD ||  A_ISDIR(p->mode)){// if result not GOOD, or p->mode is a directory
 		MyStrCpy(msg.data, "TSLK Shell> Usage: [path]<filename>\n\0"); //    display "Usage: typ [path]<filename>\n\0"
        	msg.recipient = STDOUT;
        	MsgSnd(&msg);
        	MsgRcv(&msg);
-	
+
+        return;
+   }
+
+   MyStrCpy(msg.data, cmd);  // copy rest to msg.data
+   msg.recipient=FileMgr; // ask FileMgr to check object on this
+   msg.code = OPEN_OBJ;
    
-		return;//    and return, impossible to continue
-   } else {
-   //
+   MsgSnd(&msg);
+   MsgRcv(&msg);
+   
    // (below much similar as what done above:)
    // otherwise, a file, then show its content: request open
-		while(1) { // loop to read
-			 msg.recipient=FileMgr;
-			 msg.code = READ_OBJ;
-			 
-			 MsgSnd(&msg);
-			 MsgRcv(&msg);
-			 
-			 if(msg.code == GOOD )
-			 {
-				msg.recipient = STDOUT; //    display what's read via STDOUT
-				MsgSnd(&msg);
-				MsgRcv(&msg);
-			 }
-			 else {
-				break; //    break if can read not good
-			 }
-		}
-   
-		// request to close FD
-		msg.recipient=FileMgr;
-		msg.code = CLOSE_OBJ;
-		
+	while(1) { // loop to read
+		 msg.recipient=FileMgr;
+		 msg.code = READ_OBJ;
+		 MsgSnd(&msg);
+		 MsgRcv(&msg);
+		 
+		 if(msg.code != GOOD ) break; //    break if can read not good
+
+		msg.recipient = STDOUT; //    display what's read via STDOUT
 		MsgSnd(&msg);
 		MsgRcv(&msg);
+	}
+   
+	// request to close FD
+	msg.recipient=FileMgr;
+	msg.code = CLOSE_OBJ;
+	MsgSnd(&msg);
+	MsgRcv(&msg);
 
-		if( msg.code != GOOD )
-		{
-			MyStrCpy(msg.data, "TSLK Shell> Error: Cannot Close fd object\n\0"); //    display "Error: Cannot Close fd object\n\0"
-			msg.recipient = STDOUT;
-			MsgSnd(&msg);
-			MsgRcv(&msg);
-		}
-		
-   }
+	if( msg.code != GOOD )
+	{
+		MyStrCpy(msg.data, "TSLK Shell> Error: Cannot Close fd object\n\0"); //    display "Error: Cannot Close fd object\n\0"
+		msg.recipient = STDOUT;
+		MsgSnd(&msg);
+		MsgRcv(&msg);
+	}
   }

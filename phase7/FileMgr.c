@@ -168,7 +168,8 @@ void FileMgr() {
                          msg.code, SHELL );
       }
 
-      msg.recipient = SHELL; // reply msg to shell
+//      msg.recipient = SHELL; // reply msg to shell
+      msg.recipient = msg.sender; // reply msg to shell
       msg.code = result;
       MsgSnd( &msg );
    }

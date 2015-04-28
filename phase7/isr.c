@@ -71,23 +71,26 @@ void TerminateISR() {
 }        
 
 void TimerISR() {
-//cons_printf("in timerISR\n");
-	outportb(0x20, 0x60); 
-	
-	sys_time++;
-	pcb[CRP].runtime++;   //upcount the runtime of CRP
+   int size, pid;
 
+   outportb(0x20, 0x60); 
+   sys_time++;
 
-	while(sleep_q.size != 0 && pcb[sleep_q.q[sleep_q.head]].wake_time <= sys_time) {
-		wakingID = DeQ(&sleep_q);
-		pcb[wakingID].state = RUN;
-		EnQ(wakingID, &run_q);
-	}
-	
+   size = sleep_q.size;
+   while(size--) {
+      pid = DeQ(&sleep_q);
+      if(pcb[pid].wake_time > sys_time)
+         EnQ(pid, &sleep_q);
+      else {
+         EnQ(pid, &run_q);
+         pcb[pid].state = RUN;
+      }
+   }
 
-	if(CRP <= 0) return;   //just return if CRP is Idle (0) or less (-1)
-	
-	if(pcb[CRP].runtime == TIME_LIMIT){   //if the runtime reaches the set time limit
+   if(CRP <= 0) return;   //just return if CRP is Idle (0) or less (-1)
+
+   pcb[CRP].runtime++;   //upcount the runtime of CRP
+   if(pcb[CRP].runtime == TIME_LIMIT){   //if the runtime reaches the set time limit
 		pcb[CRP].total_runtime += TIME_LIMIT;      //simply total up the total runtime of CRP
 		 pcb[CRP].runtime = 0;   //(need to rotate to the next in run queue)
 		 pcb[CRP].state = RUN;
@@ -96,13 +99,11 @@ void TimerISR() {
 	}
 }
 
-void SleepISR(int time_sleep){
-	
-	pcb[CRP].wake_time = (sys_time + time_sleep * 100);
+void SleepISR(int time_sleep) {
+	pcb[CRP].wake_time = sys_time + time_sleep * 100;
 	EnQ(CRP, &sleep_q);
 	pcb[CRP].state = SLEEP;
 	CRP = -1;
-	return;
 }
 
 void GetPidISR(){
@@ -110,7 +111,6 @@ void GetPidISR(){
 	//EnQ(CRP, &run_q);
 	//pcb[CRP].state = RUN;
 	//GetPid();
-	return;
 }
 
 void SemWaitISR(){
@@ -134,7 +134,6 @@ void SemPostISR(int semaphoreID){
      int temp = DeQ(&(semaphore[semaphoreID].wait_q));
      EnQ(temp, &run_q);				
      pcb[temp].state = RUN;     
-
    }
 }
 
@@ -147,7 +146,6 @@ void SemGetISR(){
 	   MyBzero((char *)&semaphore[sid], sizeof(semaphore_t));
 	   semaphore[sid].count = count;
 	}
-
 	pcb[CRP].TF_ptr->ecx = sid;
 }
 
@@ -173,8 +171,8 @@ void MsgSndISR(){
 	
 	source->sender = CRP;
 	source->time_stamp = sys_time;
-	if( mbox[msg_id].wait_q.size == 0 ){
 
+	if( mbox[msg_id].wait_q.size == 0 ){
 		MsgEnQ(source, &mbox[msg_id].msg_q);
 	}
 	else{
@@ -184,8 +182,6 @@ void MsgSndISR(){
 		destination = (msg_t *)pcb[temp_pid].TF_ptr->ebx;
 		memcpy((char*)destination,(char*)source,sizeof(msg_t));
 	}
-	
-	
 }
 
 void MsgRcvISR(){
@@ -201,7 +197,6 @@ void MsgRcvISR(){
 		destination = (msg_t *)pcb[CRP].TF_ptr->ebx;
 		memcpy((char *)destination,(char *)source,sizeof(msg_t));
 	}
-		
 }
 
 void IRQ3TX(){
