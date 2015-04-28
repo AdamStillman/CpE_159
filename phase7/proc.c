@@ -134,7 +134,7 @@ void Shell () {
      while(1){ // loop a
      
       // prompt valid commands (send msg to STDOUT, receive reply)
-       MyStrCpy(msg.data, "TSLK Shell> Commands: who, bye \n\0");
+       MyStrCpy(msg.data, "TSLK Shell> Commands: who, bye, dir, typ \n\0");
        msg.recipient = STDOUT;
        MsgSnd(&msg);
        MsgRcv(&msg);
