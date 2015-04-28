@@ -92,7 +92,7 @@ void Shell () {
    int BAUD_RATE, divisor;         // for serial port
    msg_t msg;                      // local message space
    char login[101], password[101]; // login and password strings entered
-   int STDIN = 4, STDOUT = 5;      // PID's of these processes
+   int STDIN = 4, STDOUT = 5, FileMgr =6;      // PID's of these processes
 
   // initialize terminal interface data structure (below)
    MyBzero((char *) &terminal.TX_q,sizeof(q_t));
@@ -307,7 +307,7 @@ void ShellDir(char *cmd, int STDOUT, int FileMgr) {
    // if code is not GOOD
    if(msg.code != GOOD){
    //    prompt error msg via STDOUT
-   MyStrCpy(msg.data, "There was an error with the msg.code. \n");
+   MyStrCpy(msg.data, "There was an error with the msg.code. \n\0");
    //    receive reply
    msg.recipient = STDOUT;
    MsgSnd(&msg);
@@ -387,7 +387,7 @@ void ShellDir(char *cmd, int STDOUT, int FileMgr) {
    MsgRcv(&msg);
    
    if(msg.code !=GOOD){
-   	MyStrCpy(msg.data, "The request was not valid.\n");
+   	MyStrCpy(msg.data, "The request was not valid.\n\0");
    	msg.recipient=STDOUT;
    	MsgSnd(&msg);
    	MsgRcv(&msg);
