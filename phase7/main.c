@@ -53,7 +53,7 @@ int main() {
 
 void InitData() {
 	int i, pid;
-  sys_time = 0;
+        sys_time = 0;
 	CRP = 0;
     //initialize queues (use MyBzero() call)
 //	initq(&run_q);

@@ -9,24 +9,18 @@ int EmptyQ(q_t *p){
 }
 
 int FullQ(q_t *p){
-	
 	return (p->size==MAX_PROC);
 }
 
 void initq(q_t *q){
-	q->size = 0;
-	q->head = 0;
-	q->tail = 0;
+	q->size = q->head = q->tail = 0;
 }
 
-
-void MyBzero(char *p, int size) {//trying changing char to Q_t
-
-int i;
-for(i=0; i<size; i++){
+void MyBzero(char *p, int size) { //trying changing char to Q_t
+   int i;
+   for(i=0; i<size; i++){
 	*p++ = '\0';
-	}
-
+   }
 } 
 
 void MyBZero(void *s, int n) {
@@ -37,75 +31,57 @@ for (i = 0; i < n; i++) {
 }
 
 void EnQ(int pid, q_t *p) {
-
-	if(FullQ(p) ){
+	if(p->size == Q_SIZE ){
 		cons_printf("Que is full! in enq\n");	
 		return;
 	}
 
 	p->q[p->tail] = pid;
-	p->tail ++;
-	
-	if(p->tail >= Q_SIZE) p->tail=0;
-
-	p->size ++;
+	p->tail++;
+	if(p->tail == Q_SIZE) p->tail=0;
+	p->size++;
 }
 
 int DeQ(q_t *p) { // return -1 if q is empty
 	int pid;
 	if(p->size ==0){
-    printf("Queue is empty in deq\n");
-    return -1;////////try Empty(&p)
-   }
+    		printf("Queue is empty in deq\n");
+    		return -1;////////try Empty(&p)
+   	}
 
 	pid = p->q[p->head];
 	p->head++;
-
-	if(p->head == Q_SIZE) p->head=0;
+	if(p->head == Q_SIZE)p->head=0;
 	p->size--;
+
 	return pid;	
 }
 
 void MsgEnQ(msg_t *p, msg_q_t *q){
-	if(q->size < Q_SIZE){
-		q->size++;
-		q->msg[q->tail] = *p;
-	//	MyStrCpy((char*) &q->msg[q->tail], (char*) sizeof(msg_t));
-		if(q->tail >= Q_SIZE) q->tail = 0;
-		else{
-		q->tail++;
-		}
-	}
-	else{
+	if(q->size == Q_SIZE){
 		cons_printf("MsgEnQ passed full queue");
+		return;
 	}
-	
-	
+	q->msg[q->tail] = *p;
+	q->tail++;
+	if(q->tail == Q_SIZE) q->tail = 0;
+	q->size++;
 }
 
 msg_t *MsgDeQ(msg_q_t *p){ // return -1 if q is empty
-
 	msg_t* msg;
-	if(p->size > 0)
-	{
-		p->size--;
-		msg = &p->msg[p->head];
-		if(p->head == Q_SIZE){
-			p->head = 0;
-		} else {
-			p->head++;
-		}
-	}
-	else
-	{
-		msg = 0;
+
+	if(p->size == 0) {
 		cons_printf("Empty queue passed to MsgDeQ");
+		return (msg_t*)0;
 	}
+
+	msg = &p->msg[p->head];
+	p->head++;
+	if(p->head == Q_SIZE)p->head = 0;
+	p->size--;
 
 	return msg;	
-
-
-
 }
 
 void MyStrCpy(char *dest, char *src){
@@ -140,7 +116,7 @@ int MyStrCmp(char *s1, char *s2){
 }
 
 int MyStrLen( char *s){
-	int count;
+	int count=0;
 	while(*s!='\0'){
 		count++;
 		s++;
@@ -150,17 +126,16 @@ int MyStrLen( char *s){
 
 void MyMemcpy(char *dest, char *src, int size){
 	int b;
-	for(b = 0; b <= size ; b++){
+	for(b = 0; b < size ; b++){
 		*dest = *src;
 		src++;
 		dest++;
 	}
-	
 }
 
 int MyStrcmpSize(char *p, char *q, int size){
 	int b;
-	for(b = 0; b <= size ; b++){
+	for(b = 0; b < size ; b++){
 		if(*p == *q){
 			p++;
 			q++;
