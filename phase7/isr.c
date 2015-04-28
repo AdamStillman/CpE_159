@@ -170,10 +170,11 @@ void MsgSndISR(){
 	int msg_id;
 	source = (msg_t *)pcb[CRP].TF_ptr->ebx;
 	msg_id = source -> recipient;
-
+	
+	source->sender = CRP;
+	source->time_stamp = sys_time;
 	if( mbox[msg_id].wait_q.size == 0 ){
-		source->sender = CRP;
-		source->time_stamp = sys_time;
+
 		MsgEnQ(source, &mbox[msg_id].msg_q);
 	}
 	else{
