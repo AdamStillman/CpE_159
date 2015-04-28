@@ -205,7 +205,7 @@ void Shell () {
        MsgRcv(&msg);
        continue; // continue (loop B)
       } //if command string is "whoami" (end)
-      else if(MyStrcmpSize(msg.data, "dir\0",3)==1){
+      else if(MyStrCmp(msg.data, "dir\0")==1){
       	ShellDir(msg.data, STDOUT,FileMgr);
       }else if (MyStrcmpSize(msg.data,"typ",3)==1){
 	ShellTyp(msg.data, STDOUT,FileMgr);
@@ -301,7 +301,7 @@ void ShellDir(char *cmd, int STDOUT, int FileMgr) {
    	MyStrCpy(msg.data, obj);
    	msg.code = CHK_OBJ;
    //    send msg to FileMgr, receive reply, chk result code
-   	msg.recipient=FileMgr;
+   	msg.recipient= FileMgr;
 	MsgSnd(&msg);
 	MsgRcv(&msg);
    // if code is not GOOD
