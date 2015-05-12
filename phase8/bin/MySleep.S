@@ -16,7 +16,7 @@
 
 _start:             # instructions starts
    movl $3, %ebx    # seconds to sleep
-   int  $48       ` # call get pid
+   int  $48         # call get pid
    int  $49         # call sleep service
 
    movl $99, %ebx   # exit number
@@ -32,3 +32,8 @@ str2:                     # another string, 101 chars total
    .rept 69               # repeat 69 times
       .ascii "\0"         # null characters
    .endr                  # end repeat
+
+
+
+
+

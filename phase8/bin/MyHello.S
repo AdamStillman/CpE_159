@@ -14,8 +14,8 @@ _start:                     # instructions begin
                             # 1st, get real addr of local msg
    #(copy the stack pointer:)
    pushl %esp               #push the stack pointer
-   pop &ebx                 #pop into register ebx
-   sub $ox1000, %ebx        #subtract 4096 from it (this is the base, real addr of the page)
+   pop %ebx                 #pop into register ebx
+   sub $0x1000, %ebx        #subtract 4096 from it (this is the base, real addr of the page)
 
    movl $msg, %ecx          #copy $msg to register ecx
    sub 0x80000001, %ecx     #subtract 2G from it, get x (offset)
@@ -38,9 +38,9 @@ _start:                     # instructions begin
 msg:                        # my msg
     .long 0                 # msg.sender
     .long 5                 # msg.recipient
-    .rept5                        # msg.time_stamp
-    .long0                        # msg.data
-    .endr                       # etc.
+    .rept 5                 # msg.time_stamp
+    .long 0                 # msg.data
+    .endr                   # etc.
           
     .ascii "Hello from TSLK\n" #msg.data (16 char)
     .rept 85                #101-16 = 85
