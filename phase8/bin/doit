@@ -1,6 +1,6 @@
 #!/bin/sh
 # $1 is the 1st argument (filename) given as "doit filename" is entered
 
-as --32 $1.s -o $1.o                       # GNU assembloer
+as --32 $1.S -o $1.o                       # GNU assembloer
 link386 -nostartfiles -userapp $1.o -o $1  # linker
 extract.pl $1                              # convert binary to text (filename.x)
