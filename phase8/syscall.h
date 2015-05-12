@@ -12,5 +12,9 @@ int SemGet(int);
 void MsgSnd(msg_t *);
 void MsgRcv(msg_t *);
 void TipIRQ3();
+//phase 8
+void Fork(char *);
+int Wait(int *);
+void Exit(int);
 
 #endif
