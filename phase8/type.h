@@ -64,6 +64,12 @@ typedef struct{
           echo,     // to echo back to terminal (the typing) or not
           TX_extra; // if 1, TXRDY event occurred but echo_q and TX_q were empty
    } terminal_t;
+typedef struct {
+   int owner;
+   int addr;
+   
+} page_t;
+}
 
 
 #endif _TYPE_H_
