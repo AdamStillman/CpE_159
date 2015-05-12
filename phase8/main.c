@@ -109,6 +109,10 @@ void InitIDT(){
   	SetEntry(53, MsgSndEntry);
   	SetEntry(54, MsgRcvEntry);
   	SetEntry(35, IRQ3Entry);
+  	//phase8
+  	SetEntry(55, ForkEntry);
+  	SetEntry(56, WaitEntry);
+  	SetEntry(57, ExitEntry);
 	outportb(0x21,~(128+8+1));
 }
 
