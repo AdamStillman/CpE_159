@@ -63,6 +63,19 @@ ENTRY(IRQ3Entry)
    pushl $IRQ3_INTR
    jmp IntoKernel
    
+ENTRY(ForkEntry)
+   pushl $FORK_INTR
+   jmp IntoKernel
+
+ENTRY(WaitEntry)
+   pushl $WAIT_INTR
+   jmp IntoKernel
+
+ENTRY(ExitEntry)
+   pushl $EXIT_INTR
+   jmp IntoKernel
+   
+   
 // Common IRQ entry, save context and call Kmain()
 IntoKernel:
    pusha
