@@ -55,7 +55,7 @@ int main() {
 
 
 void InitData() {
-	int i, pid;
+	int i, j, pid;
         sys_time = 0;
 	CRP = 0;
     //initialize queues (use MyBzero() call)
@@ -67,12 +67,18 @@ void InitData() {
 	MyBzero((char *) &sleep_q, sizeof(q_t));
 	MyBzero((char *) &semaphore_q, sizeof(q_t)); //clears the semaphore queue
 	
-	//set CRP to 0
+	//set  to 0
  	for(i=1; i<Q_SIZE; i++){//thats correct
 		pcb[i].state = NONE; //set state to NONE in pcb[1~19]
 		EnQ(i, &none_q );// queue PID's 1~19 (skip 0) into none_q (not used PID's)	 
 		EnQ(i, &semaphore_q );
 	}
+	for(j=1; j<MAXPROC; j++ ){
+		page[j].owner=-1;
+		page[j].addr=(0xE00000) + 4096 (0x1000) * j;
+
+	}
+	
 	pid = DeQ(&none_q);
 	CreateISR(pid);
 	pid = DeQ(&none_q);
@@ -85,6 +91,8 @@ void InitData() {
 	CreateISR(pid);
 	pid = DeQ(&none_q);
 	CreateISR(pid);
+	
+	
 }
 //new code
 void InitIDT(){
