@@ -81,9 +81,15 @@ char MySleep_data[]= {
        #include "bin/MySleep.x"   // this must be a separate line
 };
 
+#define MYHELLO_SIZE (sizeof(MyHello_data))
+#define MYSLEEP_SIZE (sizeof(MySleep_data))
+
+
 dir_t bin_dir[] = {
    { 16, MODE_DIR, ~0, ".", (char *)bin_dir },   // current dir
    { 17, MODE_DIR, ~0, "..", (char *)root_dir }, // parent dir, forward declared
+   { 18, MODE_EXEC, MYHELLO_SIZE, "MyHello",       (char *)MyHello_data }, // also called "8"
+   { 19, MODE_EXEC, MYSLEEP_SIZE, "MySleep", (char *)MySleep_data }, // MySleep here   
    {  0, 0, 0, NULL, NULL },                      // no entries in dir
    { END_DIR_INODE, 0, 0, NULL, NULL }           // end of bin_dir[]
 };
@@ -97,7 +103,7 @@ dir_t www_dir[] = {
    { 15, MODE_FILE, INDEX_HTML_SIZE, "index.html", (char *)index_html_data },
    {  0, 0, 0, NULL, NULL },          
    { END_DIR_INODE, 0, 0, NULL, NULL }
-};
+}
 
 dir_t root_dir[] = {
    { 1, MODE_DIR, ~0, ".", (char *)root_dir },
