@@ -90,6 +90,9 @@ void Shell () {
    msg_t msg;                      // local message space
    char login[101], password[101]; // login and password strings entered
    int STDIN = 4, STDOUT = 5, FileMgr =6;      // PID's of these processes
+   	//phase8
+   attr_t *p;
+   int child_pid, exit_num;
 
   // initialize terminal interface data structure (below)
    MyBzero((char *) &terminal.TX_q,sizeof(q_t));
@@ -209,12 +212,28 @@ void Shell () {
       }
       else { //else other strings are entered in command string
    	//show "Command not found!\n\0"
-   	MyStrCpy(msg.data, "TSLK Shell> Command not found!\n\0");
-   	msg.recipient = STDOUT;
+   	//MyStrCpy(msg.data, "TSLK Shell> Command not found!\n\0");
+   	
+   	msg.recipient = FileMgr;
+   	msg.code = CHK_OBJ;
    	MsgSnd(&msg);
    	MsgRcv(&msg);
-      
-     }// if command string is empty block (end)
+   	p = (attr_t *)msg.data; 
+				if(msg.code != GOOD || p->mode != MODE_EXEC) //if not GOOD or its attribute mode is not MODE_EXEC (executable file)
+				{
+					msg.recipient = STDOUT;
+					MyStrcpy(msg.data, "Command Not Found \n");
+					MsgSnd(&msg);
+					MsgRcv(&msg);
+				}
+				Fork(p->data);//Fork process: call "Fork(p->data);" (p->data is addr of executable)
+				child_pid = Wait(&exit_num);//wait for process to exit: child_pid = Wait(&exit_num)
+				//send to STDOUT a message showing the child pid and exit number (see demo)
+				msg.recipient = STDOUT;
+				sprintf(msg.data, "\nChild = %d    ExitNum = %d\n", child_pid, exit_num);
+      				MsgSnd(&msg);
+				MsgRcv(&msg);
+   	}// if command string is empty block (end)
    }//  repeat loop B
 } //  repeat infinite loop
 }   
