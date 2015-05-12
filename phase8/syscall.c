@@ -55,3 +55,29 @@ void MsgRcv(msg_t *msg) {
 void TipIRQ3(){
 	asm("int $35" );
 }
+
+void Fork(char *exe_addr)
+{
+	asm("movl %0, %%ebx; int $55"
+	:
+	:"g" ((int)exe_addr)
+	:"%ebx");
+}
+
+int Wait(int *exit_num)
+{
+   int pid;
+	asm("movl %1, %%ebx; int $56; movl %%ecx, %0;"
+	:"=g" (pid)
+	:"g" ((int)exit_num)
+	:"%ebx","%ecx");
+   return pid;
+}
+
+void Exit(int exit_num)
+{
+	asm("movl %0, %%ebx; int $57"
+	:
+	:"g" (exit_num)
+	:"%ebx")
+
