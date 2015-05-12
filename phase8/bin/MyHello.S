@@ -12,33 +12,38 @@
 
 _start:                     # instructions begin
                             # 1st, get real addr of local msg
-   pushl %esp               #(copy the stack pointer:)
-   #push the stack pointer
+   #(copy the stack pointer:)
+   pushl %esp               #push the stack pointer
+   pop &ebx                 #pop into register ebx
+   sub $ox1000, %ebx        #subtract 4096 from it (this is the base, real addr of the page)
+
+   movl $msg, %ecx          #copy $msg to register ecx
+   sub 0x80000001, %ecx     #subtract 2G from it, get x (offset)
+
+   add %ecx, %ebx           #add  x (offset) to ebx (base of page) -- where msg really is
+   pushl %ebx               #save a copy (push it to stack)
+   pushl %ebx               #save another copy (push it again)
    
-   #pop into register ebx
-   #subtract 4096 from it (this is the base, real addr of the page)
+   int $53                    # MsgSnd(&msg)
 
-   #copy $msg to register ecx
-   #subtract 2G from it, get x (offset)
+   popl %ebx                #pop to ebx (get a copy of real msg addr)
+   int $54                  #call interrupt number 54  # MsgRcv(&msg)
 
-   #add  x (offset) to ebx (base of page) -- where msg really is
-   #save a copy (push it to stack)
-   #save another copy (push it again)
-
-   #call interrupt number 53  # MsgSnd(&msg)
-
-   #pop to ebx (get a copy of real msg addr)
-   #call interrupt number 54  # MsgRcv(&msg)
-
-   #pop to ecx (get a copy, real msg addr)
-   #copy time stamp (base ecx + offset of time stamp) to ebx
-   #call interrupt number 57  # Exit(time stamp)
+   popl %ecx                #pop to ecx (get a copy, real msg addr)
+   mov 8(%ecx), %ebx        #copy time stamp (base ecx + offset of time stamp) to ebx
+   
+   int $57                  #call interrupt number 57  # Exit(time stamp)
 
 .data                       # data segment follows code segment in RAM
 msg:                        # my msg
-                            # msg.sender
-                            # msg.recipient
-                            # msg.time_stamp
-                            # msg.data
-                            # etc.
+    .long 0                 # msg.sender
+    .long 5                 # msg.recipient
+    .rept5                        # msg.time_stamp
+    .long0                        # msg.data
+    .endr                       # etc.
           
+    .ascii "Hello from TSLK\n" #msg.data (16 char)
+    .rept 85                #101-16 = 85
+    .ascii "\0"             #null chars
+    .endr                   #end repeat
+    
