@@ -31,6 +31,9 @@ mbox_t mbox[MAX_PROC];
 //phase 6
 terminal_t terminal;
 
+//phase 8
+page_t page[MAX_PROC];
+
 void SetEntry(int entry_num, func_ptr_t func_ptr) {
 	struct i386_gate *gateptr = &IDT_ptr[entry_num];
 	//cons_printf("in set enty\n");	
