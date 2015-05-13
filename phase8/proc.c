@@ -225,6 +225,7 @@ void Shell () {
 					MyStrcpy(msg.data, "Command Not Found \n");
 					MsgSnd(&msg);
 					MsgRcv(&msg);
+					continue;
 				}
 				Fork(p->data);//Fork process: call "Fork(p->data);" (p->data is addr of executable)
 				child_pid = Wait(&exit_num);//wait for process to exit: child_pid = Wait(&exit_num)
