@@ -244,4 +244,135 @@ void IRQ3ISR(){//phase6
 	if(terminal.TX_extra==1) IRQ3TX();
 }
 
+void ForkISR(){
+	int new_pid;
+	int i;
+	int avail_page;
 
+	//check if there are available pages
+	avail_page = -1; //set to -1 indicates no pages available
+	for(i=0; i<MAX_PROC; i++)
+	{
+		if(page[i].owner == -1) //if page is free
+		{
+			avail_page = i; //record page and exit loop
+			break;
+		}
+	}
+
+	new_pid = DeQ(&none_q); //check if available pid
+
+	//if no more PID or no RAM page available
+	if(new_pid == -1 || avail_page == -1)
+	{
+        	cons_printf("\nNo more PID/RAM available!\n"); //print error
+	
+        	pcb[CRP].TF_ptr->ecx = -1; //set CRP's TF_ptr->ecx = -1 (syscall returns -1)
+        	return; //(end of ISR)
+	}
+       	
+	page[avail_page].owner = new_pid; //set "owner" of this page to the new PID
+       	
+	MyMemcpy((char *)page[avail_page].addr, (char *)pcb[CRP].TF_ptr->ebx, 4096 ); // copy the executable into the page, use your new MyMemcpy() coded in tool.c
+        
+	//set PCB:
+	pcb[new_pid].runtime = 0;  //clear runtime and total_runtime
+	pcb[new_pid].total_runtime = 0;
+	pcb[new_pid].state = RUN;  //set state to RUN
+	pcb[new_pid].mode = UMODE;  //set mode to UMODE
+	pcb[new_pid].ppid = CRP;  //set ppid to CRP (new thing from this Phase)
+	
+	//build trapframe:
+	pcb[new_pid].TF_ptr = (TF_t *)((page[avail_page].addr + 4096) - sizeof(TF_t) + 1);//point pcb[new PID].TF_ptr to end of page - sizoeof(TF_t) + 1
+	//add those statements in CreateISR() to set trapframe except
+	//EIP = the page addr + 128 (skip header)
+	pcb[new_pid].TF_ptr->eip = (unsigned int)(page[avail_page].addr + 128);
+	pcb[new_pid].TF_ptr->eflags = EF_DEFAULT_VALUE | EF_INTR;
+   	pcb[new_pid].TF_ptr->cs = get_cs();
+   	pcb[new_pid].TF_ptr->ds = get_ds();
+   	pcb[new_pid].TF_ptr->es = get_es();
+   	pcb[new_pid].TF_ptr->fs = get_fs();
+   	pcb[new_pid].TF_ptr->gs = get_gs();
+	
+	MyBzero((char*)&mbox[new_pid], sizeof(mbox_t));  //clear mailbox
+	
+	EnQ(new_pid, &run_q);  //enqueue new PID to run queue	
+}
+	
+	
+void WaitISR(){
+int i, j, child_exit_num, *parent_exit_num_ptr;
+
+	parent_exit_num_ptr = (int *)pcb[CRP].TF_ptr->ebx;
+    	//A. look for a ZOMBIE child
+      	for(i=0; i<MAX_PROC; i++)//loop i through all PCB
+	{
+         	if(pcb[i].ppid == CRP && pcb[i].state == ZOMBIE) //if there's a ppid matches CRP and its state is ZOMBIE
+            		break;	//found! (its PID is i)
+	}
+    	//B. if not found (i is too big)
+	if(i == MAX_PROC)
+	{
+          	//block CRP (parent/calling process)
+
+          	pcb[CRP].state = WAIT_CHILD;  // its state becomes WAIT_CHILD (new state, add to state_t)
+          	CRP = -1;  //CRP becomes -1
+          	return; //(end of ISR)
+	}
+
+
+    	//C. found exited child PID i, parent should be given 2 things:
+       	pcb[CRP].TF_ptr->ecx = i;//put i into ecx of CRP's TF (for syscall Wait() to return it)
+	child_exit_num = pcb[i].TF_ptr->ebx;
+	cons_printf("\n\nWait child exit num from eax%d \n", pcb[CRP].TF_ptr->eax);
+/*-*/   *parent_exit_num_ptr = child_exit_num; //pass the exit number from the ZOMBIE to CRP
+
+    	//D. recycle resources (bring ZOMBIE to R.I.P)
+       	//reclaim child's 4KB page:
+	for(j=0; j<MAX_PROC; j++)  	//loop through pages to match the owner to child PID (i)
+	{
+		if(page[j].owner == i)
+			break;
+	}
+     	MyBzero((char *)page[j].addr, 4096);      	//once found, clear page (for security/privacy)
+	page[j].owner = -1;   	//set owner to -1 (not used)
+       	pcb[i].state = NONE;  //child's state becomes NONE
+       	EnQ(i, &none_q);   //enqueue child PID (i) back to none queue	
+	
+}
+
+void ExitISR(){
+int ppid, child_exit_num, *parent_exit_num_ptr, page_num, j;
+
+	ppid = pcb[CRP].ppid;
+	child_exit_num = pcb[CRP].TF_ptr->ebx;
+	parent_exit_num_ptr = (int *)pcb[ppid].TF_ptr->ebx;
+
+    	if(pcb[ppid].state != WAIT_CHILD)  //A. if parent of CRP NOT in state WAIT_CHILD (has yet called Wait())
+    	{   
+		pcb[CRP].state = ZOMBIE;  //state of CRP becomes ZOMBIE
+       		CRP = -1;  //CRP becomes -1;
+       		return; //(end of ISR)
+	}
+
+    	//B. parent is waiting, release it, give it the 2 things
+       	pcb[ppid].state = RUN;  //parent's state becomes RUN
+       	EnQ(ppid, &run_q);  //enqueue it to run queue
+/*-*/   pcb[ppid].TF_ptr->ecx = CRP;//give child PID (CRP) for parent's Wait() call to continue and return
+	*parent_exit_num_ptr = child_exit_num;  //pass the child (CRP) exit number to fill out parent's local exit number
+
+    //C. recycle exiting CRP's resources
+       //reclaim CRP's 4KB page:
+	for(j=0; j<MAX_PROC; j++)  	//loop through pages to match the owner to CRP
+	{
+		if(page[j].owner == CRP)
+			break;
+	}
+	page_num = j;
+     	MyBzero((char *)page[page_num].addr, 4096);      	//once found, clear page (for security/privacy)
+        page[page_num].owner = -1;   	//set owner to -1 (not used)
+       	pcb[CRP].state = NONE;  //CRP's state becomes NONE
+       	EnQ(CRP, &none_q);   //enqueue CRP back to none queue
+	CRP = -1;  //CRP becomes -1	
+	
+}
