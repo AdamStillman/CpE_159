@@ -303,7 +303,6 @@ void ForkISR(){
 void WaitISR(){
 int i, j, child_exit_num, *parent_exit_num_ptr;
 
-	parent_exit_num_ptr = (int *)pcb[CRP].TF_ptr->ebx;
     	//A. look for a ZOMBIE child
       	for(i=0; i<MAX_PROC; i++)//loop i through all PCB
 	{
@@ -323,6 +322,7 @@ int i, j, child_exit_num, *parent_exit_num_ptr;
 
     	//C. found exited child PID i, parent should be given 2 things:
        	pcb[CRP].TF_ptr->ecx = i;//put i into ecx of CRP's TF (for syscall Wait() to return it)
+	parent_exit_num_ptr = (int *)pcb[CRP].TF_ptr->ebx;
 	child_exit_num = pcb[i].TF_ptr->ebx;
 	cons_printf("\n\nWait child exit num from eax%d \n", pcb[CRP].TF_ptr->eax);
 /*-*/   *parent_exit_num_ptr = child_exit_num; //pass the exit number from the ZOMBIE to CRP
@@ -331,29 +331,34 @@ int i, j, child_exit_num, *parent_exit_num_ptr;
        	//reclaim child's 4KB page:
 	for(j=0; j<MAX_PROC; j++)  	//loop through pages to match the owner to child PID (i)
 	{
-		if(page[j].owner == i)
+		if(page[j].owner == i){
+		MyBzero((char *)page[j].addr, 4096);      	//once found, clear page (for security/privacy)
+		page[j].owner = -1;   	//set owner to -1 (not used)
 			break;
-	}
-     	MyBzero((char *)page[j].addr, 4096);      	//once found, clear page (for security/privacy)
-	page[j].owner = -1;   	//set owner to -1 (not used)
+	
+		}
+		}
+     	
+	
        	pcb[i].state = NONE;  //child's state becomes NONE
        	EnQ(i, &none_q);   //enqueue child PID (i) back to none queue	
 	
 }
 
 void ExitISR(){
-int ppid, child_exit_num, *parent_exit_num_ptr, page_num, j;
-
-	ppid = pcb[CRP].ppid;
-	child_exit_num = pcb[CRP].TF_ptr->ebx;
-	parent_exit_num_ptr = (int *)pcb[ppid].TF_ptr->ebx;
-
-    	if(pcb[ppid].state != WAIT_CHILD)  //A. if parent of CRP NOT in state WAIT_CHILD (has yet called Wait())
-    	{   
+int ppid, child_exit_num, *parent_exit_num_ptr, page_num, z;
+	
+	
+    	if(pcb[ppid].state != WAIT_CHILD){  //A. if parent of CRP NOT in state WAIT_CHILD (has yet called Wait())
+    	   
 		pcb[CRP].state = ZOMBIE;  //state of CRP becomes ZOMBIE
        		CRP = -1;  //CRP becomes -1;
        		return; //(end of ISR)
-	}
+	
+    	}
+    	child_exit_num = pcb[CRP].TF_ptr->ebx;
+	ppid = pcb[CRP].ppid;
+	*parent_exit_num_ptr = (int *)pcb[ppid].TF_ptr->ebx;
 
     	//B. parent is waiting, release it, give it the 2 things
        	pcb[ppid].state = RUN;  //parent's state becomes RUN
@@ -363,12 +368,12 @@ int ppid, child_exit_num, *parent_exit_num_ptr, page_num, j;
 
     //C. recycle exiting CRP's resources
        //reclaim CRP's 4KB page:
-	for(j=0; j<MAX_PROC; j++)  	//loop through pages to match the owner to CRP
+	for(z=0; z<MAX_PROC; z++)  	//loop through pages to match the owner to CRP
 	{
-		if(page[j].owner == CRP)
+		if(page[z].owner == CRP)
 			break;
 	}
-	page_num = j;
+	page_num = z;
      	MyBzero((char *)page[page_num].addr, 4096);      	//once found, clear page (for security/privacy)
         page[page_num].owner = -1;   	//set owner to -1 (not used)
        	pcb[CRP].state = NONE;  //CRP's state becomes NONE
