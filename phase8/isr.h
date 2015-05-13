@@ -16,5 +16,8 @@ void MsgRcvISR();
 void IRQ3ISR();
 void IRQ3TX();
 void IRQ3RX();
+void ForkISR();
+void WaitISR();
+void ExitISR();
 
 #endif
