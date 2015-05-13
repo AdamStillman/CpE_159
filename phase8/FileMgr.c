@@ -103,7 +103,7 @@ dir_t www_dir[] = {
    { 15, MODE_FILE, INDEX_HTML_SIZE, "index.html", (char *)index_html_data },
    {  0, 0, 0, NULL, NULL },          
    { END_DIR_INODE, 0, 0, NULL, NULL }
-}
+};
 
 dir_t root_dir[] = {
    { 1, MODE_DIR, ~0, ".", (char *)root_dir },
