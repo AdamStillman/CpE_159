@@ -17,6 +17,6 @@ extern q_t semaphore_q;
 extern mbox_t mbox[MAX_PROC];
 //phase6
 extern terminal_t terminal;
-etern page_t page[MAX_PROC];
+extern page_t page[MAX_PROC];
 
 #endif
