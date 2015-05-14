@@ -73,7 +73,7 @@ void InitData() {
 		EnQ(i, &none_q );// queue PID's 1~19 (skip 0) into none_q (not used PID's)	 
 		EnQ(i, &semaphore_q );
 	}
-	for(j=1; j<MAXPROC; j++ ){
+	for(j=1; j<MAX_PROC; j++ ){
 		page[j].owner=-1;
 		page[j].addr=(0xE00000) + 4096 (0x1000) * j;
 
