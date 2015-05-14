@@ -22,6 +22,7 @@ typedef struct {             // PCB describes proc image
    int wake_time;
    TF_t *TF_ptr;
    int ppid;
+   int main_table;
 } pcb_t;
 
 typedef struct {             // proc queue type
