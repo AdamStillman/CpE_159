@@ -21,6 +21,7 @@ typedef struct {             // PCB describes proc image
    int total_runtime;        // total run time since created
    int wake_time;
    TF_t *TF_ptr;
+   int ppid;
 } pcb_t;
 
 typedef struct {             // proc queue type
