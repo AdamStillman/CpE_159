@@ -12,7 +12,7 @@
 
 // this is the same as constants defined: KMODE=0, UMODE=1
 typedef enum {KMODE, UMODE} mode_t;
-typedef enum {NONE, RUNNING, RUN, SLEEP, WAIT, ZOMBIE} state_t;
+typedef enum {NONE, RUNNING, RUN, SLEEP, WAIT, ZOMBIE, WAIT_CHILD} state_t;
 
 typedef struct {             // PCB describes proc image
    mode_t mode;              // process privilege mode
