@@ -283,7 +283,7 @@ void ForkISR(){
 	pcb[new_pid].ppid = CRP;  //set ppid to CRP (new thing from this Phase)
 	
 	//build trapframe:
-	pcb[new_pid].TF_ptr = (TF_t *)((page[avail_page].addr + 4096) - sizeof(TF_t) + 1);//point pcb[new PID].TF_ptr to end of page - sizoeof(TF_t) + 1
+	pcb[new_pid].TF_ptr = (TF_t *)((page[avail_page].addr + 4096) - sizeof(TF_t));//point pcb[new PID].TF_ptr to end of page - sizoeof(TF_t) + 1
 	//add those statements in CreateISR() to set trapframe except
 	//EIP = the page addr + 128 (skip header)
 	pcb[new_pid].TF_ptr->eip = (unsigned int)(page[avail_page].addr + 128);
