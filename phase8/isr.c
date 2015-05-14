@@ -358,7 +358,7 @@ int ppid, child_exit_num, *parent_exit_num_ptr, page_num, z;
     	}
     	child_exit_num = pcb[CRP].TF_ptr->ebx;
 	ppid = pcb[CRP].ppid;
-	*parent_exit_num_ptr = (int *)pcb[ppid].TF_ptr->ebx;
+	parent_exit_num_ptr = (int *)pcb[ppid].TF_ptr->ebx;
 
     	//B. parent is waiting, release it, give it the 2 things
        	pcb[ppid].state = RUN;  //parent's state becomes RUN
