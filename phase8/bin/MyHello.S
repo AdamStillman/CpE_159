@@ -18,7 +18,7 @@ _start:                     # instructions begin
    sub $0x1000, %ebx        #subtract 4096 from it (this is the base, real addr of the page)
 
    movl $msg, %ecx          #copy $msg to register ecx
-   sub 0x80000001, %ecx     #subtract 2G from it, get x (offset)
+   sub $0x80000000, %ecx     #subtract 2G from it, get x (offset)
 
    add %ecx, %ebx           #add  x (offset) to ebx (base of page) -- where msg really is
    pushl %ebx               #save a copy (push it to stack)
