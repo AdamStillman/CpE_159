@@ -34,6 +34,9 @@ terminal_t terminal;
 //phase 8
 page_t page[MAX_PROC];
 
+//phase 9
+int sys_main_table;
+
 void SetEntry(int entry_num, func_ptr_t func_ptr) {
 	struct i386_gate *gateptr = &IDT_ptr[entry_num];
 	//cons_printf("in set enty\n");	
@@ -91,6 +94,7 @@ void InitData() {
 	pid = DeQ(&none_q);
 	CreateISR(pid);
 	
+	sys_main_table = get_cr3();
 	
 }
 //new code
