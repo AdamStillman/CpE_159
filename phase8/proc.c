@@ -222,7 +222,7 @@ void Shell () {
 				if(msg.code != GOOD || p->mode != MODE_EXEC) //if not GOOD or its attribute mode is not MODE_EXEC (executable file)
 				{
 					msg.recipient = STDOUT;
-					MyStrcpy(msg.data, "Command Not Found \n");
+					MyStrCpy(msg.data, "Command Not Found \n");
 					MsgSnd(&msg);
 					MsgRcv(&msg);
 					continue;
