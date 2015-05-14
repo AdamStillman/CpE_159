@@ -75,9 +75,8 @@ void InitData() {
 	}
 	for(j=1; j<MAX_PROC; j++ ){
 		page[j].owner=-1;
-		page[j].addr=(0xE00000) + 4096 (0x1000) * j;
-
-	}
+		page[j].addr=0xE00000 + (0x1000*j);
+		}
 	
 	pid = DeQ(&none_q);
 	CreateISR(pid);
