@@ -41,6 +41,9 @@ extern void IRQ7Entry();
 extern void MsgSndEntry();
 extern void MsgRcvEntry();
 extern void IRQ3Entry();
+extern void ForkEntry();
+extern void WaitEntry();
+extern void ExitEntry();
 __END_DECLS
 
 #endif
