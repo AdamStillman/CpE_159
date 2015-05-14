@@ -205,7 +205,7 @@ void Shell () {
        MsgRcv(&msg);
        continue; // continue (loop B)
       } //if command string is "whoami" (end)
-      else if(MyStrCmp(msg.data, "dir\0")==1){
+      else if(MyStrcmpSize(msg.data, "dir", 3)==1){
       	ShellDir(msg.data, STDOUT,FileMgr);
       }else if (MyStrcmpSize(msg.data,"typ",3)==1){
 	ShellTyp(msg.data, STDOUT,FileMgr);
