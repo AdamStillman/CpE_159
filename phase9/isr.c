@@ -251,6 +251,7 @@ void ForkISR(){
 	int new_pid;
 	int i;
 	int avail_page;
+	int new_main_table;
 
 	//check if there are available pages
 	avail_page = -1; //set to -1 indicates no pages available
@@ -300,6 +301,9 @@ void ForkISR(){
 	MyBzero((char*)&mbox[new_pid], sizeof(mbox_t));  //clear mailbox
 	
 	EnQ(new_pid, &run_q);  //enqueue new PID to run queue	
+	
+	//phase9
+	//pcb[pid].main_table = new_main_table;
 }
 	
 	
