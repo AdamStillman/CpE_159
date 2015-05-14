@@ -79,5 +79,5 @@ void Exit(int exit_num)
 	asm("movl %0, %%ebx; int $57"
 	:
 	:"g" (exit_num)
-	:"%ebx")
+	:"%ebx");
 
