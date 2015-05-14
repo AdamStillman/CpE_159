@@ -348,7 +348,7 @@ int i, j, child_exit_num, *parent_exit_num_ptr;
 void ExitISR(){
 int ppid, child_exit_num, *parent_exit_num_ptr, page_num, z;
 	
-	
+	ppid = pcb[CRP].ppid;
     	if(pcb[ppid].state != WAIT_CHILD){  //A. if parent of CRP NOT in state WAIT_CHILD (has yet called Wait())
     	   
 		pcb[CRP].state = ZOMBIE;  //state of CRP becomes ZOMBIE
@@ -357,7 +357,7 @@ int ppid, child_exit_num, *parent_exit_num_ptr, page_num, z;
 	
     	}
     	child_exit_num = pcb[CRP].TF_ptr->ebx;
-	ppid = pcb[CRP].ppid;
+
 	parent_exit_num_ptr = (int *)pcb[ppid].TF_ptr->ebx;
 
     	//B. parent is waiting, release it, give it the 2 things
