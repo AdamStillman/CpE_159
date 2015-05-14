@@ -80,4 +80,4 @@ void Exit(int exit_num)
 	:
 	:"g" (exit_num)
 	:"%ebx");
-
+}
