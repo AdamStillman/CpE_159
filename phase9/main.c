@@ -61,7 +61,7 @@ void InitData() {
 	int i, j, pid;
         sys_time = 0;
 	CRP = 0;
-	sys_main_table = get_cr3();
+	sys_main_table = get_cr3(); //Phase9 
     //initialize queues (use MyBzero() call)
 //	initq(&run_q);
 //	initq(&none_q);
