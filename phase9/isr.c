@@ -247,11 +247,14 @@ void IRQ3ISR(){//phase6
 	if(terminal.TX_extra==1) IRQ3TX();
 }
 
-void ForkISR(){
-	int new_pid;
+void ForkISR(){ //ebx executable, ecx child pid to return
+	int new_pid, page_num, exec_addr; 
+	int index[5];//need 5 free page indices
+	int  *p; // to fill table entries
+	int main_table, code_table, stack_table, code_page, stack_page;
 	int i;
-	int avail_page;
-	int new_main_table;
+	//int avail_page;
+	//int new_main_table;
 
 	//check if there are available pages
 	avail_page = -1; //set to -1 indicates no pages available
