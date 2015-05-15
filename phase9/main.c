@@ -95,7 +95,6 @@ void InitData() {
 	pid = DeQ(&none_q);
 	CreateISR(pid);
 	
-	sys_main_table = get_cr3();
 	
 }
 //new code
