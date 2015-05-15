@@ -303,7 +303,7 @@ void ForkISR(){
 	EnQ(new_pid, &run_q);  //enqueue new PID to run queue	
 	
 	//phase9
-	//pcb[pid].main_table = new_main_table;
+	pcb[new_pid].main_table = main_table;
 }
 	
 	
