@@ -19,4 +19,7 @@ extern mbox_t mbox[MAX_PROC];
 extern terminal_t terminal;
 extern page_t page[MAX_PROC];
 
+//Phase 9
+extern int sys_main_table;
+
 #endif
