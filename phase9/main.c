@@ -199,6 +199,7 @@ void Kernel(TF_t *TF_ptr) {
 	break;
    }
    SelectCRP();
+   set_cr3(pcb[CRP].main_table);
    Dispatch(pcb[CRP].TF_ptr);
 }
 
