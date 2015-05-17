@@ -49,6 +49,7 @@ int main() {
 	InitIDT();
 	CreateISR(0); //to create Idle process (PID 0)
 	//cons_printf("pcb[0] is at %u. \n", pcb[0].TF_ptr);
+	set_cr3(pcb[CRP].main_table);
 	Dispatch(pcb[0].TF_ptr);
 
    return 0;
