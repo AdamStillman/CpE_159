@@ -13,37 +13,40 @@
 _start:                     # instructions begin
                             # 1st, get real addr of local msg
    #(copy the stack pointer:)
-   pushl %esp               #push the stack pointer
-   pop %ebx                 #pop into register ebx
-   sub $0x1000, %ebx        #subtract 4096 from it (this is the base, real addr of the page)
+  # pushl %esp               #push the stack pointer
+  # pop %ebx                 #pop into register ebx
+  # sub $0x1000, %ebx        #subtract 4096 from it (this is the base, real addr of the page)
 
-   movl $msg, %ecx          #copy $msg to register ecx
-   sub $0x80000000, %ecx     #subtract 2G from it, get x (offset)
+  # movl $msg, %ecx          #copy $msg to register ecx
+   #sub $0x80000000, %ecx     #subtract 2G from it, get x (offset)
 
-   add %ecx, %ebx           #add  x (offset) to ebx (base of page) -- where msg really is
-   pushl %ebx               #save a copy (push it to stack)
-   pushl %ebx               #save another copy (push it again)
+  #add %ecx, %ebx           #add  x (offset) to ebx (base of page) -- where msg really is
+   #pushl %ebx               #save a copy (push it to stack)
+   #pushl %ebx               #save another copy (push it again)
    
+   movl $msg, %ebx
    int $53                    # MsgSnd(&msg)
 
-   popl %ebx                #pop to ebx (get a copy of real msg addr)
+   #popl %ebx                #pop to ebx (get a copy of real msg addr)
+   movl $msg, %ebx
    int $54                  #call interrupt number 54  # MsgRcv(&msg)
 
-   popl %ecx                #pop to ecx (get a copy, real msg addr)
+   #popl %ecx                #pop to ecx (get a copy, real msg addr)
+   movl $msg, %ecx
    mov 8(%ecx), %ebx        #copy time stamp (base ecx + offset of time stamp) to ebx
-   
    int $57                  #call interrupt number 57  # Exit(time stamp)
 
 .data                       # data segment follows code segment in RAM
 msg:                        # my msg
     .long 0                 # msg.sender
     .long 5                 # msg.recipient
-    .rept 5                 # msg.time_stamp
-    .long 0                 # msg.data
-    .endr                   # etc.
+    .long 0                 # msg.time_stamp
           
     .ascii "Hello from TSLK\n" #msg.data (16 char)
-    .rept 85                #101-16 = 85
+    .rept 78                #101-23 = 78
     .ascii "\0"             #null chars
     .endr                   #end repeat
-    
+    .long 0                 #msg.code
+    .long 0                 #msg.code
+    .long 0                 #msg.code
+    .long 0                 #msg.code
