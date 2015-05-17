@@ -248,39 +248,76 @@ void IRQ3ISR(){//phase6
 }
 
 void ForkISR(){ //ebx executable, ecx child pid to return
-	int new_pid, page_num, exec_addr; 
+	int new_pid; 
 	int index[5];//need 5 free page indices
 	int  *p; // to fill table entries
 	int main_table, code_table, stack_table, code_page, stack_page;
-	int i;
+	int i, index_Count;
 	//int avail_page;
 	//int new_main_table;
-
+	
+	new_pid = DeQ(&none_q); //check if available pid
+	index_Count = 0;
 	//check if there are available pages
-	avail_page = -1; //set to -1 indicates no pages available
+	//avail_page = -1; //set to -1 indicates no pages available
+	if(new_PID == -1) //Check if pid is avaliable, if not return
+	{
+		cons_printf("ForkISR(): No More PID avaliable!\n");
+		pcb[CRP].TF_ptr->ecx = -1;
+		return;
+	}
+	
 	for(i=0; i<MAX_PROC; i++)
 	{
 		if(page[i].owner == -1) //if page is free
 		{
-			avail_page = i; //record page and exit loop
-			break;
+			//avail_page = i; //record page and exit loop
+			page[i].owner=new_pid; //set page owner to new pid
+			index[index_Count] = i; //index[] = this page index
+			index_Count++;
+			if(index_Count == 5) //if git enough indexes break
+			{
+				break;
+			}
 		}
 	}
-
-	new_pid = DeQ(&none_q); //check if available pid
-
-	//if no more PID or no RAM page available
-	if(new_pid == -1 || avail_page == -1)
-	{
-        	cons_printf("\nNo more PID/RAM available!\n"); //print error
 	
-        	pcb[CRP].TF_ptr->ecx = -1; //set CRP's TF_ptr->ecx = -1 (syscall returns -1)
-        	return; //(end of ISR)
+	if(index_Count != 5) //if didn't get 5 indices
+	{
+		cons_printf("ForkISR(): not enough memory available!\n");
+		EnQ(new_pid, &none_q);// recycle/return pid
+		for(i=0; i< MAX_PROC; i++)//loop through pages to return
+		{
+			if(page[i].owner == new_pid)
+			{
+				page[i].owner = -1;
+			}
+		}
 	}
+	
+	//With five pages allocated, set addresses (int)
+	main_table = page[index[0]].addr;
+	code_table = page[index[1]].addr;
+	stack_table = page[index[2]].addr;
+	code_page = page[index[3]].addr;
+	stack_page = page[index[4]].addr;
+	
+	MyMemcpy((char*)main_table,(char*)sys_main_table,16);
        	
-	page[avail_page].owner = new_pid; //set "owner" of this page to the new PID
+       	//set entries 512 and 767 of main table to addresses of code and stack table, add two flag entries
+       	p = (int*)(main_table +(512*4));
+       	*p= code_table + 0x003;
+       	p = (int*)(main_table + (767*4));
+       	*p = stack_table + 0x003;
        	
-	MyMemcpy((char *)page[avail_page].addr, (char *)pcb[CRP].TF_ptr->ebx, 4096 ); // copy the executable into the page, use your new MyMemcpy() coded in tool.c
+       	//set entry 1023 of stack table to address of the stack page (including flags)
+       	p=(int*)(stack_table+(1023*4));
+       	*p = stack_page +0x003;
+       	
+       	
+	//page[avail_page].owner = new_pid; //set "owner" of this page to the new PID
+       	
+	MyMemcpy((char *)code_page, (char *)pcb[CRP].TF_ptr->ebx, 4096 ); // copy the executable into the page, use your new MyMemcpy() coded in tool.c
         
 	//set PCB:
 	pcb[new_pid].runtime = 0;  //clear runtime and total_runtime
@@ -290,16 +327,20 @@ void ForkISR(){ //ebx executable, ecx child pid to return
 	pcb[new_pid].ppid = CRP;  //set ppid to CRP (new thing from this Phase)
 	
 	//build trapframe:
-	pcb[new_pid].TF_ptr = (TF_t *)((page[avail_page].addr + 4096) - sizeof(TF_t));//point pcb[new PID].TF_ptr to end of page - sizoeof(TF_t) + 1
+	pcb[new_pid].TF_ptr = (TF_t *)((stack_page + 4032);//point pcb[new PID].TF_ptr to end of page - sizoeof(TF_t) + 1
 	//add those statements in CreateISR() to set trapframe except
-	//EIP = the page addr + 128 (skip header)
-	pcb[new_pid].TF_ptr->eip = (unsigned int)(page[avail_page].addr + 128);
+	
+	pcb[new_pid].TF_ptr->eip = (unsigned int)(0x80000080);//set eip of TF to virtual addr 26 + 128
+	
+	//Keep Same
 	pcb[new_pid].TF_ptr->eflags = EF_DEFAULT_VALUE | EF_INTR;
    	pcb[new_pid].TF_ptr->cs = get_cs();
    	pcb[new_pid].TF_ptr->ds = get_ds();
    	pcb[new_pid].TF_ptr->es = get_es();
    	pcb[new_pid].TF_ptr->fs = get_fs();
    	pcb[new_pid].TF_ptr->gs = get_gs();
+	
+	pcb[new_pid].TF_ptr = (TF_t*)(0xbfffffc0);
 	
 	MyBzero((char*)&mbox[new_pid], sizeof(mbox_t));  //clear mailbox
 	
